@@ -42,7 +42,7 @@ def login_required(func):
 
 
 def is_admin(func):
-    """Decorator that makes sure that there is a user logged in to the
+    """Decorator that makes sure that there is a user with admin role logged in to the
     system. Otherwise returns a json message with a 401 status_code"""
 
     def wrapped_func(request, *args, **kwargs):

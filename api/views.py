@@ -15,8 +15,8 @@ from django.shortcuts import render
 url = "http://localhost:8000"
 
 def check_errors_password(password):
-    """Revisa las condiciones de una buena contraseña y devuelve una
-    lista de errores."""
+    """Check password has 6 characters or more and returns a list of erros. 
+    If there's no errors then returns an empty list."""
     errors = []
     if len(password) < 6:
         errors.append("La contraseña debe tener al menos 6 caracteres")

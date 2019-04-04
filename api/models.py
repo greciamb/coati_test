@@ -37,16 +37,20 @@ class Usuarios(models.Model):
             super(Usuarios, self).save(*args, **kwargs)
 
     def is_admin(self):
+        '''Returns a boolean, True if user is admin, False if not.'''
         return self.role == 1
 
     def set_password(self,password):
+        ''''''
         self.password = make_password(password)
         self.save()
 
     def check_password(self,password):
+        ''''''
         return check_password(password, self.password)
 
     def create_token(self):
+        ''''''
         jwt_payload_handler = api_settings.JWT_PAYLOAD_HANDLER
         jwt_encode_handler = api_settings.JWT_ENCODE_HANDLER
         api_settings.JWT_EXPIRATION_DELTA = times.timedelta(days=365)
@@ -69,8 +73,8 @@ class Usuarios(models.Model):
 
     @classmethod
     def get_user_from_token(self, Token):
+        ''''''
         userid = -1
-        # get user id
         try:
             token = utils.jwt_decode_handler(Token)
             item = Usuarios.objects.get(pk=token['user_id'])            
@@ -81,8 +85,6 @@ class Usuarios(models.Model):
         except Exception as e:
             print e
 
-        # get user
-        # if userid != -1:
         user = Usuarios.objects.filter(id=userid).first()
         return user
 
