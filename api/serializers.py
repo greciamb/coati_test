@@ -4,4 +4,4 @@ from api.models import Usuarios
 class UsuariosSerializer(ModelSerializer):
 	class Meta:
 		model = Usuarios
-		exclude = ('password','created_at','updated_at')
+		exclude = ('created_at','updated_at')

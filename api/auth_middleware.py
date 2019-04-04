@@ -8,7 +8,7 @@ class AuthMiddleware(object):
         self.get_response = get_response
 
     def __call__(self, request):
-        request.usuario = get_usuario_from_request(request)
+        request.usuario = get_admin_request(request)
 
         return self.get_response(request)
 
@@ -19,7 +19,8 @@ def get_admin_request(request):
     "AUTHORIZATION"
     """
     token = request.META.get("HTTP_AUTHORIZATION", "")
-    return Usuario.get_user_from_token(token)
+    print token
+    return Usuarios.get_user_from_token(token)
 
 
 def login_required(func):

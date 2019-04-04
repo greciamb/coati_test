@@ -13,5 +13,4 @@ from django.contrib import auth
 class UsuariosAdmin(admin.ModelAdmin):
 	list_display = ('username','password')
 
-
 admin.site.register(Usuarios,UsuariosAdmin)

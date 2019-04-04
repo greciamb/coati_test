@@ -28,6 +28,14 @@ class Usuarios(models.Model):
         managed = True
         db_table = 'Usuarios'
 
+    def save(self, *args, **kwargs):
+        try:
+            if self.id is None:
+                self.password =make_password(self.password)
+            super(Usuarios, self).save(*args, **kwargs)
+        except:
+            super(Usuarios, self).save(*args, **kwargs)
+
     def is_admin(self):
         return self.role == 1
 
@@ -50,3 +58,33 @@ class Usuarios(models.Model):
         except Exception as e:
             print e
         return token
+
+    def details_dict(self):
+        self.token = self.create_token()
+        self.save()
+        return {'id': self.pk,
+                'username': self.username,
+                'token': self.token,
+                }
+
+    @classmethod
+    def get_user_from_token(self, Token):
+        userid = -1
+        # get user id
+        try:
+            token = utils.jwt_decode_handler(Token)
+            item = Usuarios.objects.get(pk=token['user_id'])            
+            if item.username == token['username']:
+                userid = token['user_id']
+            else:
+                userid = -1
+        except Exception as e:
+            print e
+
+        # get user
+        # if userid != -1:
+        user = Usuarios.objects.filter(id=userid).first()
+        return user
+
+    def __str__(self):
+        return self.name

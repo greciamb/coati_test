@@ -7,11 +7,20 @@ from rest_framework.response import Response
 from api.models import Usuarios
 from api.serializers import UsuariosSerializer
 from django.http import JsonResponse
+from django.contrib.auth.hashers import make_password, check_password
 
 from django.shortcuts import render
 
 # Create your views here.
 url = "http://localhost:8000"
+
+def check_errors_password(password):
+    """Revisa las condiciones de una buena contraseña y devuelve una
+    lista de errores."""
+    errors = []
+    if len(password) < 6:
+        errors.append("La contraseña debe tener al menos 6 caracteres")
+    return errors
 
 
 def check_errors_create_account(username, password):
@@ -20,9 +29,6 @@ def check_errors_create_account(username, password):
 
     if not username and (username_query.count() >= 1):
         errors.append("Ese usuario ya está vinculado a otra cuenta")
-
-    if (not errors) and email:
-        check_errors_email(email, errors)
 
     errors.extend(check_errors_password(password))
 
@@ -59,9 +65,18 @@ def usuarios_detail(request,pk):
 @is_admin
 def edit_usuario(request, item):
     if request.method == 'PUT':
-        pass
+    	request.POST._mutable =True
+    	request.data['password']=make_password(request.data.get('password',''))
+    	serializer = UsuariosSerializer(item, data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+
+            return Response({'status': True, 'data': serializer.data})
+        return Response({'status': False, 'data': serializer.errors}, status=400)
+
     elif request.method == 'DELETE':
-        pass
+        item.delete()
+        return Response(status=204)
 
 
 @login_required
@@ -81,6 +96,7 @@ def create_usuario(request):
     if request.method == 'POST':
         username = request.POST.get('username', '')
         password = request.POST.get('password', '')
+        role = request.POST.get('role', '')
         errors = check_errors_create_account(username, password)
 
         status = 400
@@ -90,8 +106,9 @@ def create_usuario(request):
         if response['success']:
             # successs
             status = 200
-            new_user = Usuarios(username=username, email=email)
-            new_user.set_password(password)
+            new_user = Usuarios(username=username, role=role,password=password)
+            new_user.save()
+            # new_user.set_password(password)
             response['data'] = new_user.details_dict()
         else:
             logger.error(errors)
