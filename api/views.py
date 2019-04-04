@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 from django.views.decorators.csrf import csrf_exempt
 from rest_framework.decorators import api_view
+from api.auth_middleware import login_required,is_admin
 from rest_framework.response import Response
 from api.models import Usuarios
 from api.serializers import UsuariosSerializer
@@ -12,23 +13,125 @@ from django.shortcuts import render
 # Create your views here.
 url = "http://localhost:8000"
 
-@api_view(['GET','PUT','POST','DELETE'])
-def usuarios_detail(request,pk):
-	if request.method == 'GET':
-		pass
-	elif request.method == 'POST':
-		pass
-	elif request.method == 'DELETE':
-		pass
 
+def check_errors_create_account(username, password):
+    errors = []
+    username_query = Usuarios.objects.filter(username=username)
+
+    if not username and (username_query.count() >= 1):
+        errors.append("Ese usuario ya está vinculado a otra cuenta")
+
+    if (not errors) and email:
+        check_errors_email(email, errors)
+
+    errors.extend(check_errors_password(password))
+
+    return errors
+
+
+def check_errors_login(username, password):
+    errors = []
+
+    if not username:
+        errors.append("No se especifico el nombre de usuario")
+
+    if not password:
+        errors.append(u"No se especifico la contraseña")
+
+    return errors
+
+@login_required
+@api_view(['GET','PUT','DELETE'])
+def usuarios_detail(request,pk):
+    try:
+        item = Usuarios.objects.get(pk=pk)
+    except Usuarios.DoesNotExist:
+        return Response({'status': False, 'errors': ['El usuario no existe', ]}, status=400)
+
+    if request.method == 'GET':
+        serializer = UsuariosSerializer(item)
+        return Response({'status': True, 'data': serializer.data})
+
+    else:
+        return edit_usuario(request, item)
+
+
+@is_admin
+def edit_usuario(request, item):
+    if request.method == 'PUT':
+        pass
+    elif request.method == 'DELETE':
+        pass
+
+
+@login_required
 @api_view(['GET','POST'])
 def usuarios_list(request):
-	if request.method == 'GET':
-		pass
-	elif request.method == 'POST':
-		pass
+    if request.method == 'GET':
+        items = Usuarios.objects.all()
+        serializer = UsuariosSerializer(items, many=True)
+        return Response({'success': True, 'data': serializer.data})
+
+    else:
+        return create_usuario(request)
+
+
+@is_admin
+def create_usuario(request):
+    if request.method == 'POST':
+        username = request.POST.get('username', '')
+        password = request.POST.get('password', '')
+        errors = check_errors_create_account(username, password)
+
+        status = 400
+        response = {'success': (len(errors) == 0),
+                    'errors': errors}
+
+        if response['success']:
+            # successs
+            status = 200
+            new_user = Usuarios(username=username, email=email)
+            new_user.set_password(password)
+            response['data'] = new_user.details_dict()
+        else:
+            logger.error(errors)
+
+            # We return the response
+            # We need to use unsafe mode to return a list of errors
+        return JsonResponse(response, safe=False, status=status, content_type='application/json')
 
 @api_view(['POST'])
 def login(request):
     if request.method == 'POST':
-        pass
+        username = request.POST.get("username", "")
+        password = request.POST.get("password", "")
+        errors = check_errors_login(username, password)
+        user = Usuarios.objects.get(username=username)
+        status = 200
+        # check that that the account exists
+        if (not errors) and (user is None):
+            # username does not exist
+            errors.append("Usuario no encontrado")
+
+        # check password matches
+        if not errors:
+
+            if not user.check_password(password):
+                errors.append("Contraseña incorrecta")
+
+        # check that the email has been confirmed
+        #    if not errors and user.email == "":
+        #        errors.append("Se necesita confirmar el email" +
+        #                      " de la cuenta para iniciar sesión")
+        if not errors:
+            # Success
+            response = {'success': True,
+                        'data': user.details_dict()}
+        else:
+            # Error
+            status = 400
+            response = {'success': False,
+                        'errors': errors}
+
+        return JsonResponse(response, safe=False, status=status)
+    return None

@@ -4,7 +4,7 @@ from api import views
 
 urlpatterns = [
 	#Allows GET, PUT, DELETE
-    url(r'^usuario/(?P<pk>[0-9]+)$', views.usuarios_detail),
+    url(r'^usuarios/(?P<pk>[0-9]+)$', views.usuarios_detail),
     #Allows GET, POST
     url(r'^usuarios/$', views.usuarios_list),
     #Allows POST

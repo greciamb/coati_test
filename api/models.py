@@ -9,8 +9,6 @@ from rest_framework_jwt.settings import api_settings
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 
-import os
-
 from django.utils.translation import ugettext as _
 
 
@@ -22,7 +20,6 @@ class Usuarios(models.Model):
     role = models.IntegerField(choices=ROLE,blank=True,null=True)
     username = models.CharField(unique=True, max_length=255)
     password = models.CharField(max_length=255)
-    recover_password = models.CharField(max_length=255,blank=True,null=True)
     token = models.CharField(max_length=255,blank=True,null=True),
     created_at = models.DateTimeField(db_column='created_at', auto_now_add=True)
     updated_at = models.DateTimeField(db_column='updated_at', auto_now=True)
