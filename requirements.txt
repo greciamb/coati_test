@@ -25,7 +25,7 @@ MySQL-python==1.2.5
 numpy==1.16.2
 openpay==0.3
 pilkit==2.0
-Pillow==5.0.0
+Pillow==9.0.0
 postgres==2.2.2
 psycopg2==2.7.6.1
 psycopg2-binary==2.7.6.1
